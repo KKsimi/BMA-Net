@@ -1,2 +1,2 @@
 # BMA-Net
-We will publish the source code when the manuscript is accepted.
+The complete code will be published after the manuscript is accepted
