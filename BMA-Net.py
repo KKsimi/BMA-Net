@@ -122,7 +122,7 @@ class DWConv(nn.Module):
         return x
 
 
-class shiftmlp(nn.Module):
+class MSF(nn.Module):
     def __init__(self, in_features, hidden_features=None, out_features=None, act_layer=nn.GELU, drop=0.05, shift_size=5):
         super().__init__()
         out_features = out_features or in_features
@@ -177,37 +177,7 @@ class shiftmlp(nn.Module):
         return x
 
 
-class MSF(nn.Module):
-    def __init__(self, dim, mlp_ratio=4., drop=0., shift_size=5,
-                 drop_path=0., act_layer=nn.GELU, norm_layer=nn.BatchNorm3d):  # norm_layer=nn.LayerNorm
-        super().__init__()
 
-        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
-        self.norm2 = norm_layer(dim)
-        mlp_hidden_dim = int(dim * mlp_ratio)
-        self.mlp = shiftmlp(in_features=dim, hidden_features=mlp_hidden_dim, act_layer=act_layer, drop=drop,
-                            shift_size=shift_size)
-        self.apply(self._init_weights)
-
-    def _init_weights(self, m):
-        if isinstance(m, nn.Linear):
-            trunc_normal_(m.weight, std=.02)
-            if isinstance(m, nn.Linear) and m.bias is not None:
-                nn.init.constant_(m.bias, 0)
-        elif isinstance(m, nn.LayerNorm):
-            nn.init.constant_(m.bias, 0)
-            nn.init.constant_(m.weight, 1.0)
-        elif isinstance(m, nn.Conv3d):
-            fan_out = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-            fan_out //= m.groups
-            m.weight.data.normal_(0, math.sqrt(2.0 / fan_out))
-            if m.bias is not None:
-                m.bias.data.zero_()
-
-    def forward(self, x):
-
-        x = x + self.drop_path(self.mlp(self.norm2(x)))
-        return x
 
 
 
