@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-def relative_pos_dis(height=32, weight=32, sita=0.9):
+def relative_pos_dis(height=32, weight=32):
     coords_h = torch.arange(height)
     coords_w = torch.arange(weight)
     coords = torch.stack(torch.meshgrid([coords_h, coords_w]))  # (3, D, H, W)
@@ -12,8 +12,8 @@ def relative_pos_dis(height=32, weight=32, sita=0.9):
     return dis
 
 class TransformerBlock(nn.Module):
-    def __init__(self, input_x: int, input_y: int, input_z: int, hidden_size: int, num_heads: int,
-                 dropout_rate: float = 0.0, pos_embed=False, isup=False):
+    def __init__(self, input_x: int, input_y: int, hidden_size: int, num_heads: int,
+                 dropout_rate: float = 0.0, isup=False):
         if hidden_size % num_heads != 0:
             print('Hidden size is ', hidden_size)
             print('Num heads is ', num_heads)
@@ -33,7 +33,7 @@ class TransformerBlock(nn.Module):
 
 class Attention(nn.Module):
 
-    def __init__(self, hidden_size, num_heads=4, qkv_bias=False, attn_drop=0.1, isup=False, input_x=4, input_y=4):
+    def __init__(self, hidden_size, num_heads=4, attn_drop=0.1, isup=False, input_x=4, input_y=4):
         super().__init__()
         self.num_heads = num_heads
         self.attn_drop = nn.Dropout(attn_drop)
@@ -57,7 +57,7 @@ class Attention(nn.Module):
             )
 
     def forward(self, x):
-        temp = x
+
         qkv = self.qkv(x).chunk(3, dim=1)
 
         if self.isup:  # GDSA
@@ -82,7 +82,6 @@ class Attention(nn.Module):
             x = rearrange(x, 'b g z (h w) d -> b (g d) z h w', h=t, w=t)
         else:  # FGFF
             x = x.float()
-            temp = x
             y = torch.fft.rfft2(x, dim=(3, 4))
             y_img = y.imag
             y_re = y.real
